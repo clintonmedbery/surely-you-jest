@@ -11,6 +11,10 @@ on:
         required: false
         default: 'See CHANGELOG.md for details'
 
+# Explicit permissions needed for GitHub releases
+permissions:
+  contents: write
+
 jobs:
   update-version:
     name: Update Version
