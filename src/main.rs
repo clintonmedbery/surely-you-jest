@@ -3,7 +3,6 @@ use std::{env, path::PathBuf};
 
 mod app;
 mod jest;
-mod ui;
 mod widgets;
 
 use app::App;

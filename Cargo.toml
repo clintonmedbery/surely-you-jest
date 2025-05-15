@@ -1,10 +1,22 @@
 [package]
 name = "surely-you-jest"
 version = "0.1.0"
-description = "Rust base TUI tool to help you run your jest tests!"
+description = "A TUI tool to help you navigate, run, and debug Jest tests"
 authors = ["Clinton Medbery <clintonmedbery@users.noreply.github.com>"]
 license = "MIT"
 edition = "2024"
+readme = "README.md"
+repository = "https://github.com/clintonmedbery/surely-you-jest"
+homepage = "https://github.com/clintonmedbery/surely-you-jest"
+keywords = ["jest", "test", "tui", "terminal", "javascript"]
+categories = ["command-line-utilities", "development-tools::testing"]
+documentation = "https://github.com/clintonmedbery/surely-you-jest#readme"
+include = [
+    "src/**/*",
+    "Cargo.toml",
+    "LICENSE",
+    "README.md"
+]
 
 [dependencies]
 crossterm = "0.28.1"
@@ -12,3 +24,7 @@ ratatui = "0.29.0"
 color-eyre = "0.6.3"
 regex = "1.11.1"
 glob = "0.3.2"
+
+[[bin]]
+name = "syj"
+path = "src/main.rs"
