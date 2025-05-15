@@ -1,0 +1,108 @@
+name: Comprehensive Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 0.1.0)'
+        required: true
+      releaseNotes:
+        description: 'Release notes'
+        required: false
+        default: 'See CHANGELOG.md for details'
+
+jobs:
+  update-version:
+    name: Update Version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update version in Cargo.toml
+        run: |
+          sed -i "s/^version = \".*\"/version = \"${{ github.event.inputs.version }}\"/" Cargo.toml
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          git add Cargo.toml
+          git commit -m "Bump version to ${{ github.event.inputs.version }}"
+
+      - name: Update CHANGELOG.md
+        run: |
+          # Get today's date in YYYY-MM-DD format
+          TODAY=$(date +"%Y-%m-%d")
+          
+          # Create a new entry in CHANGELOG.md
+          sed -i "/## \[Unreleased\]/a \\\n## [${{ github.event.inputs.version }}] - $TODAY\n\n${{ github.event.inputs.releaseNotes }}\n" CHANGELOG.md
+          
+          git add CHANGELOG.md
+          git commit -m "Update CHANGELOG for version ${{ github.event.inputs.version }}"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu,x86_64-apple-darwin,aarch64-apple-darwin,x86_64-pc-windows-msvc
+
+      - name: Install cross-compilation dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Build Linux x86_64
+        run: |
+          cargo build --release --target x86_64-unknown-linux-gnu
+          mkdir -p dist
+          cp target/x86_64-unknown-linux-gnu/release/syj dist/syj-linux-amd64
+          chmod +x dist/syj-linux-amd64
+
+      - name: Build Linux ARM64
+        run: |
+          cargo build --release --target aarch64-unknown-linux-gnu
+          mkdir -p dist
+          cp target/aarch64-unknown-linux-gnu/release/syj dist/syj-linux-arm64
+          chmod +x dist/syj-linux-arm64
+
+      - name: Build macOS x86_64
+        if: false  # Cross-compilation for macOS is challenging, disabled for now
+        run: |
+          cargo build --release --target x86_64-apple-darwin
+          mkdir -p dist
+          cp target/x86_64-apple-darwin/release/syj dist/syj-macos-amd64
+          chmod +x dist/syj-macos-amd64
+
+      - name: Build macOS ARM64
+        if: false  # Cross-compilation for macOS is challenging, disabled for now
+        run: |
+          cargo build --release --target aarch64-apple-darwin
+          mkdir -p dist
+          cp target/aarch64-apple-darwin/release/syj dist/syj-macos-arm64
+          chmod +x dist/syj-macos-arm64
+
+      - name: Build Windows x86_64
+        if: false  # Cross-compilation for Windows is challenging, disabled for now
+        run: |
+          cargo build --release --target x86_64-pc-windows-msvc
+          mkdir -p dist
+          cp target/x86_64-pc-windows-msvc/release/syj.exe dist/syj-windows-amd64.exe
+
+      - name: Create and push tag
+        run: |
+          git tag -a v${{ github.event.inputs.version }} -m "Release v${{ github.event.inputs.version }}"
+          git push --tags
+          git push
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ github.event.inputs.version }}
+          tag_name: v${{ github.event.inputs.version }}
+          draft: false
+          prerelease: false
+          body: ${{ github.event.inputs.releaseNotes }}
+          files: |
+            dist/syj-linux-amd64
+            dist/syj-linux-arm64
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
