@@ -14,7 +14,7 @@ impl<'a> HelpBarWidget<'a> {
     pub fn new(controls: Vec<(&'a str, &'a str)>) -> Self {
         Self { controls }
     }
-    
+
     /// Create a help bar for test list view
     pub fn for_test_list() -> Self {
         Self::new(vec![
@@ -26,7 +26,7 @@ impl<'a> HelpBarWidget<'a> {
             ("q", "Quit"),
         ])
     }
-    
+
     /// Create a help bar for test detail view
     pub fn for_test_detail() -> Self {
         Self::new(vec![
@@ -35,7 +35,7 @@ impl<'a> HelpBarWidget<'a> {
             ("q", "Quit"),
         ])
     }
-    
+
     /// Create a help bar for test terminal view
     pub fn for_test_terminal() -> Self {
         Self::new(vec![
@@ -48,7 +48,7 @@ impl<'a> HelpBarWidget<'a> {
             ("q", "Quit"),
         ])
     }
-    
+
     /// Create a help bar for test results view
     pub fn for_test_results() -> Self {
         Self::new(vec![
@@ -63,24 +63,26 @@ impl<'a> HelpBarWidget<'a> {
 impl<'a> Widget for HelpBarWidget<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let mut spans = Vec::new();
-        
+
         // Create styled spans for each control
         for (i, (key, description)) in self.controls.iter().enumerate() {
             // Add separator after first item
             if i > 0 {
                 spans.push(Span::raw(" │ "));
             }
-            
+
             // Add key with highlighting
             spans.push(Span::styled(
                 key.to_string(),
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
             ));
-            
+
             // Add description
             spans.push(Span::raw(format!(": {}", description)));
         }
-        
+
         // Create and render the paragraph
         Paragraph::new(Line::from(spans))
             .style(Style::default().fg(Color::Gray))

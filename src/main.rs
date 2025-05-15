@@ -18,7 +18,10 @@ fn main() -> Result<()> {
     });
 
     if !path.exists() || !path.is_dir() {
-        eprintln!("The specified path does not exist or is not a directory: {}", path.display());
+        eprintln!(
+            "The specified path does not exist or is not a directory: {}",
+            path.display()
+        );
         std::process::exit(1);
     }
 
@@ -27,7 +30,7 @@ fn main() -> Result<()> {
         Some(config_path) => {
             println!("Using Jest configuration from {}", config_path.display());
             config_finder::extract_test_matches(&config_path)?
-        },
+        }
         None => {
             println!("Using default test patterns");
             // Fallback to default patterns if no config found
@@ -45,19 +48,19 @@ fn main() -> Result<()> {
             ]
         }
     };
-    
+
     let tests = config_finder::find_matching_tests(&test_matches, &path)?;
     let path_str = path.display().to_string();
 
     // Initialize the terminal
     let terminal = ratatui::init();
-    
+
     // Create and run the application
     let result = App::new(path_str, test_matches, tests).run(terminal);
-    
+
     // Restore terminal state
     ratatui::restore();
-    
+
     // Return the result
     result
 }

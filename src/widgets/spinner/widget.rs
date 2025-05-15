@@ -1,6 +1,6 @@
 use ratatui::{
     prelude::*,
-    widgets::{Block, Borders, Widget, Paragraph},
+    widgets::{Block, Borders, Paragraph, Widget},
 };
 
 /// Animation styles for the spinner
@@ -36,13 +36,13 @@ impl SpinnerWidget {
             ..Self::default()
         }
     }
-    
+
     /// Set the spinner style
     pub fn style(mut self, style: SpinnerStyle) -> Self {
         self.style = style;
         self
     }
-    
+
     /// Get the current animation frame based on system time
     fn current_frame(&self) -> &str {
         // Use the current time to determine the frame
@@ -52,10 +52,10 @@ impl SpinnerWidget {
             .unwrap_or_default()
             .as_millis() as usize;
         let frame_index = (current_millis / 150) % frames.len(); // 150ms per frame
-        
+
         frames[frame_index]
     }
-    
+
     /// Get the frames for the current animation style
     fn get_frames(&self) -> &[&str] {
         match self.style {
@@ -70,16 +70,18 @@ impl Widget for SpinnerWidget {
     fn render(self, area: Rect, buf: &mut Buffer) {
         // Get current frame
         let spinner_frame = self.current_frame();
-        
+
         // Create the spinner text
         let text = format!("{} {}", spinner_frame, self.label);
-        
+
         // Render with a nice block
         Paragraph::new(text)
-            .block(Block::default()
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Cyan))
-                .title(" Running Test "))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .border_style(Style::default().fg(Color::Cyan))
+                    .title(" Running Test "),
+            )
             .alignment(Alignment::Center)
             .style(Style::default().fg(Color::Cyan))
             .render(area, buf);

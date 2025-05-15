@@ -1,7 +1,7 @@
-use std::path::PathBuf;
-use std::io;
-use std::fs;
 use regex::Regex;
+use std::fs;
+use std::io;
+use std::path::PathBuf;
 
 /// Finds a Jest configuration file in the given directory.
 pub fn find_jest_config_file(dir: &PathBuf) -> io::Result<Option<PathBuf>> {
@@ -16,7 +16,7 @@ pub fn find_jest_config_file(dir: &PathBuf) -> io::Result<Option<PathBuf>> {
         ".jestrc.js",
         ".jestrc.json",
     ];
-    
+
     // Also check in package.json (common for Jest config)
     let package_json = dir.join("package.json");
     if package_json.exists() {
@@ -27,7 +27,7 @@ pub fn find_jest_config_file(dir: &PathBuf) -> io::Result<Option<PathBuf>> {
             }
         }
     }
-    
+
     // Look for dedicated Jest config files
     for filename in config_filenames.iter() {
         let config_path = dir.join(filename);
@@ -36,7 +36,7 @@ pub fn find_jest_config_file(dir: &PathBuf) -> io::Result<Option<PathBuf>> {
             return Ok(Some(config_path));
         }
     }
-    
+
     // Look for Jest config in parent directory (up to 3 levels)
     let mut parent_dir = dir.parent().map(PathBuf::from);
     let mut level = 0;
@@ -44,7 +44,7 @@ pub fn find_jest_config_file(dir: &PathBuf) -> io::Result<Option<PathBuf>> {
         if level >= 3 {
             break; // Don't go too far up
         }
-        
+
         for filename in config_filenames.iter() {
             let config_path = parent.join(filename);
             if config_path.exists() {
@@ -52,11 +52,11 @@ pub fn find_jest_config_file(dir: &PathBuf) -> io::Result<Option<PathBuf>> {
                 return Ok(Some(config_path));
             }
         }
-        
+
         parent_dir = parent.parent().map(PathBuf::from);
         level += 1;
     }
-    
+
     println!("No Jest configuration file found");
     Ok(None)
 }
@@ -64,47 +64,50 @@ pub fn find_jest_config_file(dir: &PathBuf) -> io::Result<Option<PathBuf>> {
 /// Extracts testMatch patterns from a Jest configuration file.
 pub fn extract_test_matches(config_path: &PathBuf) -> io::Result<Vec<String>> {
     let content = fs::read_to_string(config_path)?;
-    
+
     // Extract testMatch array using regex
     // This is a simple extraction - a real implementation might use a JS parser
-    let test_match_regex = Regex::new(r#"testMatch\s*:?\s*\[\s*(["'][^"']+["'](?:\s*,\s*["'][^"']+["'])*)\s*\]"#)
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-    
+    let test_match_regex =
+        Regex::new(r#"testMatch\s*:?\s*\[\s*(["'][^"']+["'](?:\s*,\s*["'][^"']+["'])*)\s*\]"#)
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+
     if let Some(captures) = test_match_regex.captures(&content) {
         if let Some(patterns_match) = captures.get(1) {
             let patterns_str = patterns_match.as_str();
-            
+
             // Split by comma and extract the patterns
             let patterns: Vec<String> = patterns_str
                 .split(',')
                 .map(|s| s.trim().trim_matches(|c| c == '"' || c == '\'').to_string())
                 .collect();
-            
+
             println!("Found testMatch patterns: {:?}", patterns);
             return Ok(patterns);
         }
     }
-    
+
     // Alternative pattern - check for testMatch: [values]
     // This is for different formatting styles
-    let alt_regex = Regex::new(r#"["']testMatch["']\s*:?\s*\[\s*(["'][^"']+["'](?:\s*,\s*["'][^"']+["'])*)\s*\]"#)
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-    
+    let alt_regex = Regex::new(
+        r#"["']testMatch["']\s*:?\s*\[\s*(["'][^"']+["'](?:\s*,\s*["'][^"']+["'])*)\s*\]"#,
+    )
+    .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+
     if let Some(captures) = alt_regex.captures(&content) {
         if let Some(patterns_match) = captures.get(1) {
             let patterns_str = patterns_match.as_str();
-            
+
             // Split by comma and extract the patterns
             let patterns: Vec<String> = patterns_str
                 .split(',')
                 .map(|s| s.trim().trim_matches(|c| c == '"' || c == '\'').to_string())
                 .collect();
-            
+
             println!("Found testMatch patterns (alt format): {:?}", patterns);
             return Ok(patterns);
         }
     }
-    
+
     // If all else fails, return default patterns
     Ok(vec![
         "**/*.test.js".to_string(),
@@ -126,7 +129,7 @@ pub fn find_matching_tests(
     project_root: &PathBuf,
 ) -> io::Result<Vec<String>> {
     use glob::glob;
-    
+
     let mut results = Vec::new();
     let canonical_root = project_root.canonicalize()?;
 
@@ -154,14 +157,14 @@ pub fn find_matching_tests(
                 if path.to_string_lossy().contains("/node_modules/") {
                     continue;
                 }
-                
+
                 // Try to make the path relative to the search directory
                 let display_path = if let Ok(rel_path) = path.strip_prefix(&canonical_root) {
                     rel_path.display().to_string()
                 } else {
                     path.display().to_string()
                 };
-                
+
                 results.push(display_path);
             }
         }
@@ -169,6 +172,6 @@ pub fn find_matching_tests(
 
     // Sort results alphabetically for better readability
     results.sort();
-    
+
     Ok(results)
 }

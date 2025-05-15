@@ -1,5 +1,5 @@
 use ratatui::prelude::*;
-use ratatui::widgets::{Widget, Paragraph};
+use ratatui::widgets::{Paragraph, Widget};
 
 pub struct HeaderWidget {
     pub title: String,
@@ -11,7 +11,10 @@ impl Widget for HeaderWidget {
         let line = Line::from(vec![
             Span::styled(self.title, Style::default().add_modifier(Modifier::BOLD)),
             Span::raw(" - "),
-            Span::styled(self.subtitle, Style::default().add_modifier(Modifier::ITALIC)),
+            Span::styled(
+                self.subtitle,
+                Style::default().add_modifier(Modifier::ITALIC),
+            ),
         ]);
 
         Paragraph::new(line).render(area, buf);
